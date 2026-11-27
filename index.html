@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2a45f0"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<title>Lensmate: your pocket photography coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ebf0;--panel:#f7f8fa;--ink:#161b26;--mute:#5d6676;--line:#c9cfda;--acc:#2a45f0;--onacc:#fff;--warn:#c4410c;--ok:#0f7a4f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141922;--panel:#1d2430;--ink:#eef1f7;--mute:#9aa4b6;--line:#333d4e;--acc:#7f93ff;--onacc:#10142a;--warn:#ff9b6a;--ok:#5fd9a3;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141922;--panel:#1d2430;--ink:#eef1f7;--mute:#9aa4b6;--line:#333d4e;--acc:#7f93ff;--onacc:#10142a;--warn:#ff9b6a;--ok:#5fd9a3;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 14px 40px}
+h1{font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.02em;margin:6px 0 4px}
+.sub{color:var(--mute);margin:0 0 14px;max-width:46ch}
+.stage{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:4/3;display:grid;place-items:center}
+.stage video,.stage canvas{width:100%;height:100%;object-fit:contain;display:block}
+.stage video{position:absolute;inset:0}
+.grid{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 33.1%,rgba(255,255,255,.35) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.35) 66.6%,transparent 66.9%),linear-gradient(0deg,transparent 33.1%,rgba(255,255,255,.35) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.35) 66.6%,transparent 66.9%)}
+.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#c8cfdd;padding:20px;font-size:15px}
+.live{display:flex;gap:10px;align-items:center;margin:10px 0 4px;font-size:14px}
+.meter{flex:0 0 120px;height:10px;border-radius:6px;background:linear-gradient(90deg,#1b2233,#8c93a3,#fff);position:relative;border:1px solid var(--line)}
+.meter i{position:absolute;top:-4px;width:4px;height:18px;border-radius:2px;background:var(--acc);outline:2px solid var(--bg);left:50%;transition:left .3s}
+#liveTip{color:var(--ink);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+button,select,input[type=text]{font:inherit;color:var(--ink)}
+button{border:1.5px solid var(--ink);background:transparent;border-radius:999px;padding:9px 16px;cursor:pointer;font-weight:600;min-height:44px}
+button.p{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin:6px 0}
+.chips button{flex:0 0 auto;border-color:var(--line);padding:6px 14px;min-height:38px;font-weight:500}
+.chips button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs{display:flex;border-bottom:2px solid var(--line);margin-top:14px}
+.tabs button{border:0;border-radius:0;border-bottom:3px solid transparent;margin-bottom:-2px;padding:10px 18px;color:var(--mute)}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--acc)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:0 0 14px 14px;border-top:0;padding:16px}
+.score{display:flex;align-items:baseline;gap:8px}
+.score b{font-size:48px;line-height:1;font-weight:800;color:var(--acc)}
+.tip{border-left:4px solid var(--acc);padding:2px 0 2px 12px;margin:14px 0}
+.tip h3{margin:0;font-size:17px}
+.tip p{margin:2px 0 0;color:var(--mute)}
+.tip .do{color:var(--ink);font-weight:600}
+.set{background:var(--bg);border-radius:10px;padding:10px 12px;margin:12px 0}
+.sl{display:grid;grid-template-columns:90px 1fr 40px;align-items:center;gap:8px;margin:6px 0;font-size:15px}
+.sl output{text-align:right;color:var(--mute);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--acc);min-height:32px}
+.ask{display:flex;gap:8px;margin-top:14px}
+.ask input{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:10px 16px;min-height:44px}
+.ans{white-space:pre-wrap;margin:10px 0 0}
+.note{color:var(--mute);font-size:14px;margin:8px 0 0}
+.err{color:var(--warn);font-weight:600}
+.ok{color:var(--ok)}
+[hidden]{display:none!important}
+#cmpBtn{touch-action:none;user-select:none;-webkit-user-select:none}
+#lessons{display:grid;gap:6px}#lessons button{text-align:left;border-color:var(--line);font-weight:500}#lessons button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<h1>Lensmate</h1>
+<p class="sub">Point, shoot and learn. Get coached on every frame, then fix it on the spot.</p>
+<details class="set" style="margin:0 0 12px"><summary style="cursor:pointer;font-weight:600">API key settings</summary>
+<p class="note">Your key stays in this browser only. Get one at console.anthropic.com.</p>
+<div class="ask"><input type="password" id="key" placeholder="sk-ant-…" aria-label="Anthropic API key" autocomplete="off"><button id="keyBtn">Save</button></div>
+<p class="note" id="keyNote" aria-live="polite"></p></details>
+
+<div class="stage" id="stage">
+  <video id="vid" playsinline muted hidden></video>
+  <canvas id="cv" hidden></canvas>
+  <div class="grid" id="grid" hidden></div>
+  <div class="empty" id="empty">Open the camera for live coaching, or add a photo you have already taken.</div>
+</div>
+
+<div class="live" id="liveRow" hidden>
+  <div class="meter" title="Exposure"><i id="needle"></i></div>
+  <span id="liveTip">Reading the light…</span>
+</div>
+
+<div class="row">
+  <button class="p" id="camBtn">Open camera</button>
+  <button id="snapBtn" hidden>Take photo</button>
+  <button id="upBtn">Add photo</button>
+  <button id="liveBtn" hidden>Back to live</button>
+  <input type="file" id="file" accept="image/*" hidden>
+  <input type="file" id="capFile" accept="image/*" capture="environment" hidden>
+</div>
+<div class="chips" id="chips" role="group" aria-label="What are you shooting?"></div>
+
+<div class="tabs" role="tablist">
+  <button role="tab" id="t1" aria-selected="true">Coach</button>
+  <button role="tab" id="t2" aria-selected="false">Edit</button>
+  <button role="tab" id="t3" aria-selected="false">Learn</button>
+</div>
+
+<section class="panel" id="coach">
+  <div class="row" style="margin-top:0"><button class="p" id="coachBtn" disabled>Coach this shot</button></div>
+  <div id="coachOut"><p class="note">Take or add a photo, pick what you are shooting, then tap Coach this shot. You will get a score, three fixes, and settings to try for the retake.</p></div>
+  <div class="ask">
+    <input type="text" id="q" placeholder="Ask anything, like “why are faces dark?”" aria-label="Ask a photography question">
+    <button id="askBtn">Ask</button>
+  </div>
+  <p class="ans" id="ans" aria-live="polite"></p>
+</section>
+
+<section class="panel" id="edit" hidden>
+  <div class="row" style="margin-top:0">
+    <button class="p" id="autoBtn" disabled>AI auto-enhance</button>
+    <button id="resetBtn" disabled>Reset</button>
+    <button id="saveBtn" disabled>Save photo</button>
+    <button id="cmpBtn" disabled>Hold to compare</button>
+  </div>
+  <p class="note" id="editNote" aria-live="polite">Add a photo first, then adjust it here.</p>
+  <div class="chips" id="aspRow" role="group" aria-label="Crop shape"></div>
+  <div id="sliders"></div>
+</section>
+
+<section class="panel" id="learn" hidden>
+  <p class="note" style="margin-top:0">Six short lessons. Pick one, shoot it with the camera above, then get checked.</p>
+  <div id="lessons"></div>
+  <div id="lesBox" hidden>
+    <div class="set"><p id="lesC" style="margin:0"></p><p id="lesX" style="margin:8px 0 0;font-weight:600"></p></div>
+    <button class="p" id="lesBtn">Check my attempt</button>
+    <p class="note" id="lesRes" aria-live="polite"></p>
+  </div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const GENRES=["Portrait","Event or wedding","Street","Food","Product","Landscape","Night","Pets or kids"];
+let genre=GENRES[1],src=null,stream=null,timer=null,sampleNs=null,busy=false,aspect=null;
+const V={straighten:0,zoom:0,brightness:0,contrast:0,saturation:0,warmth:0,vignette:0};
+const LABELS={straighten:"Straighten",zoom:"Zoom crop",brightness:"Brightness",contrast:"Contrast",saturation:"Color",warmth:"Warmth",vignette:"Vignette"};
+const RANGE={straighten:[-10,10],zoom:[0,100],brightness:[-50,50],contrast:[-50,50],saturation:[-60,60],warmth:[-50,50],vignette:[0,80]};
+const cv=$("cv"),ctx=cv.getContext("2d");
+
+/* ---------- chips ---------- */
+GENRES.forEach(g=>{const b=document.createElement("button");b.textContent=g;b.setAttribute("aria-pressed",g===genre);b.onclick=()=>{genre=g;[...$("chips").children].forEach(c=>c.setAttribute("aria-pressed",c===b))};$("chips").appendChild(b)});
+
+/* ---------- tabs ---------- */
+function tab(n){[1,2,3].forEach(i=>{$("t"+i).setAttribute("aria-selected",i==n);$(["coach","edit","learn"][i-1]).hidden=i!=n})}
+$("t1").onclick=()=>tab(1);$("t2").onclick=()=>tab(2);$("t3").onclick=()=>tab(3);
+
+/* ---------- sliders ---------- */
+Object.keys(V).forEach(k=>{const d=document.createElement("div");d.className="sl";d.innerHTML=`<label for="s_${k}">${LABELS[k]}</label><input type="range" id="s_${k}" min="${RANGE[k][0]}" max="${RANGE[k][1]}" value="0"><output id="o_${k}">0</output>`;$("sliders").appendChild(d);d.querySelector("input").oninput=e=>{V[k]=+e.target.value;$("o_"+k).textContent=V[k];render()}});
+function setV(o){Object.keys(V).forEach(k=>{let v=Number(o&&o[k]);if(!isFinite(v))v=0;v=Math.max(RANGE[k][0],Math.min(RANGE[k][1],Math.round(v)));V[k]=v;$("s_"+k).value=v;$("o_"+k).textContent=v});render()}
+
+/* ---------- drawing ---------- */
+function render(){
+  if(!src)return;
+  const sw=src.width,sh=src.height,ar=aspect||sw/sh;let w,h;if(ar>=sw/sh){w=sw;h=Math.round(sw/ar)}else{h=sh;w=Math.round(sh*ar)}cv.width=w;cv.height=h;
+  ctx.filter=`brightness(${1+V.brightness/100}) contrast(${1+V.contrast/100}) saturate(${1+V.saturation/100})`;
+  {const rad=V.straighten*Math.PI/180,c=Math.abs(Math.cos(rad))+Math.abs(Math.sin(rad))*Math.max(w/h,h/w),s=Math.max(w/sw,h/sh)*c*(1+V.zoom/100);ctx.save();ctx.translate(w/2,h/2);ctx.rotate(rad);ctx.scale(s,s);ctx.drawImage(src,-sw/2,-sh/2);ctx.restore()}ctx.filter="none";
+  if(V.warmth){ctx.globalCompositeOperation="soft-light";ctx.fillStyle=V.warmth>0?`rgba(255,150,40,${V.warmth/60})`:`rgba(60,130,255,${-V.warmth/60})`;ctx.fillRect(0,0,w,h);ctx.globalCompositeOperation="source-over"}
+  if(V.vignette){const g=ctx.createRadialGradient(w/2,h/2,Math.min(w,h)*.3,w/2,h/2,Math.max(w,h)*.75);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,`rgba(0,0,0,${V.vignette/100})`);ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}
+}
+function setSource(c){
+  src=c;$("empty").hidden=true;cv.hidden=false;$("vid").hidden=true;$("grid").hidden=false;$("liveRow").hidden=true;
+  $("snapBtn").hidden=true;$("liveBtn").hidden=!stream;
+  ["coachBtn","autoBtn","resetBtn","saveBtn","cmpBtn"].forEach(i=>$(i).disabled=false);
+  $("editNote").textContent="Straighten and crop, then adjust the light, or let AI suggest a starting point.";aspect=null;setAspectUI();
+  setV({});
+}
+function fitCanvas(el,max){const sw=el.videoWidth||el.naturalWidth||el.width,sh=el.videoHeight||el.naturalHeight||el.height;const s=Math.min(1,max/Math.max(sw,sh));const c=document.createElement("canvas");c.width=Math.round(sw*s);c.height=Math.round(sh*s);c.getContext("2d").drawImage(el,0,0,c.width,c.height);return c}
+
+/* ---------- camera ---------- */
+$("camBtn").onclick=async()=>{
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920}},audio:false});
+    const v=$("vid");v.srcObject=stream;await v.play();goLive();
+  }catch(e){$("empty").hidden=false;$("empty").innerHTML="Live preview is blocked in this view. Tap <b>Use phone camera</b> to shoot with your phone’s camera, then coach and edit the photo here.";$("camBtn").textContent="Use phone camera";$("camBtn").onclick=()=>$("capFile").click()}
+};
+function goLive(){
+  $("empty").hidden=true;cv.hidden=true;$("vid").hidden=false;$("grid").hidden=false;$("liveRow").hidden=false;
+  $("snapBtn").hidden=false;$("liveBtn").hidden=true;$("camBtn").hidden=true;
+  clearInterval(timer);timer=setInterval(analyse,700);
+}
+$("liveBtn").onclick=goLive;
+$("snapBtn").onclick=()=>{clearInterval(timer);setSource(fitCanvas($("vid"),1600))};
+$("upBtn").onclick=()=>$("file").click();
+$("file").onchange=$("capFile").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const im=new Image();
+  im.onload=()=>{clearInterval(timer);setSource(fitCanvas(im,1600));URL.revokeObjectURL(im.src)};
+  im.src=URL.createObjectURL(f);e.target.value="";
+};
+
+/* ---------- on-device light reading ---------- */
+const tmp=document.createElement("canvas");tmp.width=48;tmp.height=36;const tx=tmp.getContext("2d",{willReadFrequently:true});
+function stats(el){
+  tx.drawImage(el,0,0,48,36);const d=tx.getImageData(0,0,48,36).data;let sum=0,hi=0,lo=0,top=0,tn=0,mid=0,mn=0;
+  for(let y=0;y<36;y++)for(let x=0;x<48;x++){const i=(y*48+x)*4,l=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];sum+=l;if(l>245)hi++;if(l<15)lo++;if(y<10){top+=l;tn++}if(y>=12&&y<30&&x>=14&&x<34){mid+=l;mn++}}
+  const n=48*36;return{mean:sum/n,hi:hi/n,lo:lo/n,back:(top/tn)-(mid/mn)};
+}
+function analyse(){
+  const v=$("vid");if(!v.videoWidth)return;const s=stats(v);
+  $("needle").style.left=Math.min(97,Math.max(1,s.mean/255*100))+"%";
+  let t="Light looks balanced. Check your background.";
+  if(s.back>60&&s.mean>90)t="Backlit: step sideways or tap your subject’s face.";
+  else if(s.hi>.12)t="Highlights are blowing out. Lower exposure.";
+  else if(s.mean<60)t="Too dark. Find light or raise exposure.";
+  else if(s.lo>.25)t="Deep shadows. Face a window or lamp.";
+  else if(s.mean>190)t="Very bright. Pull exposure down a touch.";
+  $("liveTip").textContent=t;
+}
+
+/* ---------- Claude ---------- */
+function b64(b){return new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result.split(",")[1]);f.readAsDataURL(b)})}
+async function shim(input,o={}){
+ const key=(localStorage.getItem("lm_key")||"").trim();if(!key)throw{code:"not_granted"};
+ const content=[];for(const im of (o.images||[]))content.push({type:"image",source:{type:"base64",media_type:"image/jpeg",data:await b64(im)}});content.push({type:"text",text:input});
+ let res;try{res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:1024,messages:[{role:"user",content}]})})}catch(e){throw{code:"network"}}
+ if(!res.ok)throw{code:res.status==401?"not_granted":res.status==429?"rate_limited":"error"};
+ const d=await res.json();const text=(d.content||[]).map(c=>c.text||"").join("");if(o.onText)o.onText({text,delta:text});return{text};
+}
+shim.json=async(i,o)=>{const r=await shim(i,o);const m=r.text.replace(/```json|```/g,"").trim();return JSON.parse(m.slice(m.indexOf("{"),m.lastIndexOf("}")+1))};
+shim.limits=async()=>({images:true});
+async function getSample(){
+  if(sampleNs)return sampleNs;
+  sampleNs=shim;
+  return sampleNs;
+}
+function blobOf(c,max){const s=fitCanvas(c,max);return new Promise(r=>s.toBlob(r,"image/jpeg",.82))}
+function fail(e,el){
+  const c=e&&e.code;el.innerHTML="";const p=document.createElement("p");p.className="err";
+  p.textContent=c==="not_granted"?"Add a valid API key under API key settings, above the camera.":c==="rate_limited"?"Too many requests. Wait a moment and try again.":"The coach could not answer. Try again.";el.appendChild(p);
+}
+async function withImage(){
+  const s=await getSample();if(!s)throw{code:"unavailable"};
+  let imgs=[];try{const l=await s.limits();if(l&&l.images)imgs=[await blobOf(src,1024)]}catch(e){}
+  return{s,imgs};
+}
+
+$("coachBtn").onclick=async()=>{
+  if(busy||!src)return;busy=true;$("coachBtn").disabled=true;const out=$("coachOut");out.innerHTML='<p class="note">Studying your frame…</p>';
+  try{
+    const{s,imgs}=await withImage();
+    const r=await s.json(`You are a warm, expert photography teacher coaching a beginner who just took this photo on a phone. Subject type: ${genre}. Judge only what is visible. Reply with JSON only: {"score":1-10 integer,"summary":"one sentence on what works","tips":[{"title":"short fix name","why":"one plain sentence teaching the principle","action":"exactly what to do on the retake"}],"settings":"phone camera settings to try, such as exposure, focus, zoom, HDR, and a good angle","next":"one idea for a stronger second shot"}. Give exactly 3 tips, most important first. Use simple words.`,{images:imgs,modelTier:"default",cache:false});
+    out.innerHTML="";
+    const sc=document.createElement("div");sc.className="score";sc.innerHTML="<b></b><span></span>";sc.querySelector("b").textContent=r.score+"/10";sc.querySelector("span").textContent=r.summary||"";out.appendChild(sc);
+    (r.tips||[]).forEach(t=>{const d=document.createElement("div");d.className="tip";d.innerHTML="<h3></h3><p></p><p class='do'></p>";d.children[0].textContent=t.title;d.children[1].textContent=t.why;d.children[2].textContent=t.action;out.appendChild(d)});
+    if(r.settings){const d=document.createElement("div");d.className="set";d.innerHTML="<b>Try these settings</b><div></div>";d.lastChild.textContent=r.settings;out.appendChild(d)}
+    if(r.next){const p=document.createElement("p");p.className="note";p.textContent="Next shot: "+r.next;out.appendChild(p)}
+  }catch(e){fail(e,out)}
+  busy=false;$("coachBtn").disabled=false;
+};
+
+$("askBtn").onclick=async()=>{
+  const q=$("q").value.trim();if(!q||busy)return;busy=true;$("askBtn").disabled=true;const a=$("ans");a.className="ans";a.textContent="Thinking…";
+  try{
+    const s=await getSample();if(!s)throw{code:"unavailable"};
+    let imgs=[];if(src){try{const l=await s.limits();if(l&&l.images)imgs=[await blobOf(src,768)]}catch(e){}}
+    await s(`You are a friendly photography teacher. Subject type: ${genre}. ${imgs.length?"The attached photo is the learner’s latest shot.":""} Answer in under 120 words, plain words, with one concrete thing to try. Question: ${q}`,{images:imgs,cache:false,onText:({text})=>{a.textContent=text}});
+  }catch(e){fail(e,a)}
+  busy=false;$("askBtn").disabled=false;
+};
+$("q").onkeydown=e=>{if(e.key==="Enter")$("askBtn").click()};
+
+$("autoBtn").onclick=async()=>{
+  if(busy||!src)return;busy=true;$("autoBtn").disabled=true;$("editNote").className="note";$("editNote").textContent="AI is choosing edits…";
+  try{
+    const{s,imgs}=await withImage();
+    const r=await s.json(`You are a photo retoucher. Subject type: ${genre}. Pick edits that fix this photo (recover dark faces or tame bright areas, correct color cast, keep it natural). Reply with JSON only: {"brightness":-50..50,"contrast":-50..50,"saturation":-60..60,"warmth":-50..50,"vignette":0..80,"note":"one sentence on what you changed and why"}.`,{images:imgs,modelTier:"quick",cache:false});
+    setV({...r,straighten:V.straighten,zoom:V.zoom});$("editNote").textContent=r.note||"Enhanced. Fine-tune with the sliders.";
+  }catch(e){
+    const m=stats(src);setV({brightness:m.mean<90?25:m.mean>180?-20:0,contrast:12,saturation:10,straighten:V.straighten,zoom:V.zoom});
+    $("editNote").textContent="AI was unavailable, so a basic on-device enhance was applied.";
+  }
+  busy=false;$("autoBtn").disabled=false;
+};
+$("resetBtn").onclick=()=>{aspect=null;setAspectUI();setV({});$("editNote").textContent="Back to the original."};
+$("saveBtn").onclick=async()=>{
+  try{
+    
+    const b=await new Promise(r=>cv.toBlob(r,"image/jpeg",.92));
+    const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="lensmate-photo.jpg";a.click();
+    $("editNote").className="note ok";$("editNote").textContent="Saved.";
+  }catch(e){$("editNote").className="note";$("editNote").textContent="Saving is not available here. Press and hold the photo to save it."}
+};
+/* crop shape */
+const ASP=[["Original",null],["1:1",1],["4:5",.8],["16:9",16/9]];
+ASP.forEach(([n,r])=>{const b=document.createElement("button");b.textContent=n;b.dataset.r=r||"";b.onclick=()=>{aspect=r;setAspectUI();render()};$("aspRow").appendChild(b)});
+function setAspectUI(){[...$("aspRow").children].forEach(b=>b.setAttribute("aria-pressed",(b.dataset.r?+b.dataset.r:null)===aspect))}
+setAspectUI();
+
+/* hold to compare with original */
+let snap=null,sa=null;
+function cmpOn(){if(!src||snap)return;snap={...V};sa=aspect;Object.keys(V).forEach(k=>V[k]=0);aspect=null;render()}
+function cmpOff(){if(!snap)return;Object.assign(V,snap);aspect=sa;snap=null;render()}
+{const cb=$("cmpBtn");cb.addEventListener("pointerdown",e=>{e.preventDefault();cmpOn()});["pointerup","pointerleave","pointercancel"].forEach(ev=>cb.addEventListener(ev,cmpOff));cb.addEventListener("keydown",e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();cmpOn()}});cb.addEventListener("keyup",cmpOff)}
+
+/* lessons */
+const LESSONS=[
+{t:"Light from the side",c:"Light direction shapes mood. Side light adds depth, while light from behind hides faces.",x:"Shoot one subject with a window or the sun to one side of it."},
+{t:"Rule of thirds",c:"A subject off-center on a grid line feels balanced and alive.",x:"Put your main subject on a thirds line or where two lines cross."},
+{t:"Leading lines",c:"Paths, rails, and tent poles pull the eye toward your subject.",x:"Find a line and frame it so it points at your subject."},
+{t:"Fill the frame",c:"Getting closer removes clutter and makes the subject the story.",x:"Step in until the subject fills at least half of the frame."},
+{t:"Clean background",c:"A busy background competes with your subject, and one small step can fix it.",x:"Shift until nothing distracting sits right behind your subject."},
+{t:"Change your height",c:"Eye level is the default. Low or high angles feel fresh.",x:"Crouch low or lift your phone high, then shoot the same subject."}];
+let lesson=null,done={};try{done=JSON.parse(localStorage.getItem("lm_done")||"{}")}catch(e){}
+function drawLessons(){const L=$("lessons");L.innerHTML="";LESSONS.forEach((l,i)=>{const b=document.createElement("button");b.setAttribute("aria-pressed",lesson===i);b.textContent=(done[i]?"✓ ":"")+l.t;b.onclick=()=>{lesson=i;drawLessons();$("lesBox").hidden=false;$("lesC").textContent=l.c;$("lesX").textContent="Your task: "+l.x;$("lesRes").textContent=""};L.appendChild(b)})}
+drawLessons();
+$("lesBtn").onclick=async()=>{
+  if(lesson==null||busy)return;const r0=$("lesRes");r0.className="note";
+  if(!src){r0.textContent="Take or add a photo first.";return}
+  busy=true;$("lesBtn").disabled=true;r0.textContent="Checking your photo…";
+  try{
+    const{s,imgs}=await withImage();const l=LESSONS[lesson];
+    const r=await s.json(`You are a kind photography teacher. Lesson: ${l.t}. Task: ${l.x} Judge whether the attached photo shows the learner applied this lesson. Reply with JSON only: {"passed":true or false,"feedback":"two short sentences: what they did well, then one specific tweak"}.`,{images:imgs,modelTier:"quick",cache:false});
+    r0.textContent=(r.passed?"Nailed it. ":"Almost there. ")+(r.feedback||"");
+    if(r.passed){done[lesson]=1;try{localStorage.setItem("lm_done",JSON.stringify(done))}catch(e){}drawLessons()}
+  }catch(e){fail(e,r0)}
+  busy=false;$("lesBtn").disabled=false;
+};
+
+try{$("key").value=localStorage.getItem("lm_key")||""}catch(e){}
+$("keyBtn").onclick=()=>{try{localStorage.setItem("lm_key",$("key").value.trim());$("keyNote").textContent="Saved on this device."}catch(e){$("keyNote").textContent="Could not save the key."}};
+window.addEventListener("pagehide",()=>{if(stream)stream.getTracks().forEach(t=>t.stop())});
+</script>
+</body>
+</html>
